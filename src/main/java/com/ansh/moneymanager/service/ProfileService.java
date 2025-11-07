@@ -38,7 +38,9 @@ public class ProfileService {
 
         String activationLink = activationURL+"/api/v1.0/activate?token="+newProfile.getActivationToken();
         String subject = "Activate your MoneyManager Account";
-        String body = "Click on the following link to activate your account: " +activationLink;
+        String body = "Welcome to MoneyManager \uD83D\uDC4B\n" +
+                "\n" +
+                "Please click the link to activate your account: " + activationLink;
         emailService.sendEmail(profileDto.getEmail(), subject, body);
 
         return toDto(newProfile);
