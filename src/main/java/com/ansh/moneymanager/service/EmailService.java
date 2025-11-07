@@ -43,4 +43,36 @@ public class EmailService {
             throw new RuntimeException("Email sending failed: " + e.getMessage());
         }
     }
+
+    @Async
+    public void sendEmailWithAttachment(String to, String subject, String body, byte[] attachment, String filename) {
+        try {
+            ApiClient client = Configuration.getDefaultApiClient();
+            client.setApiKey(apiKey);
+
+            TransactionalEmailsApi apiInstance = new TransactionalEmailsApi();
+
+            SendSmtpEmailSender sender = new SendSmtpEmailSender().email(fromEmail);
+            SendSmtpEmailTo receiver = new SendSmtpEmailTo().email(to);
+
+            byte[] base64Bytes = java.util.Base64.getEncoder().encode(attachment);
+
+            sibModel.SendSmtpEmailAttachment attachmentObj = new sibModel.SendSmtpEmailAttachment()
+                    .name(filename)
+                    .content(base64Bytes);
+
+            SendSmtpEmail email = new SendSmtpEmail()
+                    .sender(sender)
+                    .addToItem(receiver)
+                    .subject(subject)
+                    .htmlContent(body)
+                    .addAttachmentItem(attachmentObj);
+
+            apiInstance.sendTransacEmail(email);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Email sending with attachment failed: " + e.getMessage());
+        }
+    }
+
 }
