@@ -7,5 +7,5 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/moneymanager-0.0.1-SNAPSHOT.jar moneymanager.jar
-EXPOSE 9090
-ENTRYPOINT ["java", "-jar", "moneymanager.jar"]
+EXPOSE 8080
+ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "moneymanager.jar"]
