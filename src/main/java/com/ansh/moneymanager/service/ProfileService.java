@@ -30,22 +30,42 @@ public class ProfileService {
     @Value("${app.activation.url}")
     private String activationURL;
 
-    public ProfileDTO registerProfile(ProfileDTO profileDto){
+    public ProfileDTO registerProfile(ProfileDTO profileDto) {
 
-        ProfileEntity newProfile =  toEntity(profileDto);
+        ProfileEntity newProfile = toEntity(profileDto);
         newProfile.setActivationToken(UUID.randomUUID().toString());
         newProfile = profileRepository.save(newProfile);
 
-        String activationLink = activationURL+"/api/v1.0/activate?token="+newProfile.getActivationToken();
+        String activationLink = activationURL + "/api/v1.0/activate?token=" + newProfile.getActivationToken();
         String subject = "Activate your MoneyManager Account";
-        String body = "Welcome to MoneyManager \uD83D\uDC4B\n" +
-                "\n" +
-                "Please click the link to activate your account: " + activationLink;
+
+        String body = """
+                <html>
+                  <body>
+                    <p>Welcome to <b>MoneyManager</b> 👋</p>
+                    <p>Please click the button below to activate your account:</p>
+                
+                    <a href="%s" style="display:inline-block; padding:10px 18px; 
+                    background-color:#4CAF50; color:#fff; text-decoration:none; 
+                    border-radius:6px; font-weight:bold;">Activate Account</a>
+                
+                    <br><br>
+                    <p>If the button doesn’t work, use this link:</p>
+                    <p><a href="%s">%s</a></p>
+                
+                    <br><br>
+                    <p>Best Regards,<br/>MoneyManager Team</p>
+                  </body>
+                </html>
+                """.formatted(activationLink, activationLink, activationLink);
+
         emailService.sendEmail(profileDto.getEmail(), subject, body);
+
 
         return toDto(newProfile);
     }
-    public ProfileEntity toEntity(ProfileDTO profileDto){
+
+    public ProfileEntity toEntity(ProfileDTO profileDto) {
         return ProfileEntity.builder()
                 .id(profileDto.getId())
                 .fullname(profileDto.getFullname())
@@ -57,7 +77,7 @@ public class ProfileService {
                 .build();
     }
 
-    public ProfileDTO toDto(ProfileEntity profileEntity){
+    public ProfileDTO toDto(ProfileEntity profileEntity) {
         return ProfileDTO.builder()
                 .id(profileEntity.getId())
                 .fullname(profileEntity.getFullname())
@@ -68,7 +88,7 @@ public class ProfileService {
                 .build();
     }
 
-    public boolean activateProfile(String activationToken){
+    public boolean activateProfile(String activationToken) {
         return profileRepository.findByActivationToken(activationToken)
                 .map(profile -> {
                     profile.setIsActive(true);
@@ -78,25 +98,25 @@ public class ProfileService {
                 .orElse(false);
     }
 
-    public boolean isAccountActive(String email){
+    public boolean isAccountActive(String email) {
         return profileRepository.findByEmail(email)
                 .map(ProfileEntity::getIsActive)
                 .orElse(false);
     }
 
-    public ProfileEntity getCurrentProfile(){
+    public ProfileEntity getCurrentProfile() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         return profileRepository.findByEmail(authentication.getName())
-                .orElseThrow(()-> new UsernameNotFoundException("Profile not found with email: "+authentication.getName()));
+                .orElseThrow(() -> new UsernameNotFoundException("Profile not found with email: " + authentication.getName()));
     }
 
-    public ProfileDTO getPublicProfile(String email){
+    public ProfileDTO getPublicProfile(String email) {
         ProfileEntity currentUser = null;
-        if(email == null){
-            currentUser =  getCurrentProfile();
-        } else{
-            currentUser = profileRepository.findByEmail(email).orElseThrow(()-> new UsernameNotFoundException("Profile not found with email: "+email));
+        if (email == null) {
+            currentUser = getCurrentProfile();
+        } else {
+            currentUser = profileRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Profile not found with email: " + email));
         }
         return ProfileDTO.builder()
                 .id(currentUser.getId())
